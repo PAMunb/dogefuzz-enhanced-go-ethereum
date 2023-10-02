@@ -44,7 +44,7 @@ cat > genesis.json <<-END
     "arrowGlacierBlock": 0,
     "grayGlacierBlock": 0,
     "clique": {
-      "period": 5,
+      "period": 0,
       "epoch": 30000
     }
   },
@@ -98,9 +98,10 @@ geth \
     --datadir $ENV_FOLDER \
     --nat "any" \
     --dev.gaslimit "$GAS_LIMIT" \
+    --miner.gaslimit "$GAS_LIMIT" \
+    --miner.threads "4" \
     --dev \
     --allow-insecure-unlock \
     --unlock "$DEPLOYER_WALLET_ADDRESS, $AGENT_WALLET_ADDRESS, $NODE_WALLET_ADDRESS" \
     --password "$ENV_FOLDER/pwd.txt" \
-    --fakepow
 
