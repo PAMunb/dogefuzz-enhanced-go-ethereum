@@ -1,0 +1,7 @@
+.vscode/
+data/
+*.pkey
+build/bin/
+istanbul.toml
+genesis.json
+geth
