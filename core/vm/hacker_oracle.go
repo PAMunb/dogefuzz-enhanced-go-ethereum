@@ -82,8 +82,6 @@ func (oracle *HackerReentrancy) InitOracle(hacker_call_hashs []common.Hash, hack
 	oracle.feauture = ""
 }
 func (oracle *HackerReentrancy) TestOracle() bool {
-	var hasReen bool
-	hasReen = false
 	i := 0
 	hash1 := oracle.hacker_call_hashs[i]
 	for j := i + 1; j < len(oracle.hacker_call_hashs); j++ {
@@ -100,10 +98,10 @@ func (oracle *HackerReentrancy) TestOracle() bool {
 			}
 			repeatedPair := [2]*HackerContractCall{oracle.hacker_calls[i], oracle.hacker_calls[j]}
 			oracle.repeatedPairs = append(oracle.repeatedPairs, repeatedPair)
-			hasReen = true
+			return true
 		}
 	}
-	return hasReen
+	return false
 }
 func (oracle *HackerReentrancy) Write(writer io.Writer) {
 	var str string
@@ -154,7 +152,7 @@ func (oracle *HackerRepeatedCall) TestOracle() bool {
 				oracle.hacker_calls[i].isBrother(i, oracle.hacker_calls[j]) {
 				repeatedPair := [2]*HackerContractCall{oracle.hacker_calls[i], oracle.hacker_calls[j]}
 				oracle.repeatedPairs = append(oracle.repeatedPairs, repeatedPair)
-				hasRepeated = true
+				return true
 			}
 		}
 	}
@@ -199,15 +197,11 @@ func (oracle *HackerEtherTransfer) InitOracle(hacker_call_hashs []common.Hash, h
 }
 func (oracle *HackerEtherTransfer) TestOracle() bool {
 	ret := false
-	// if oracle.triggerOracle(oracle.hacker_calls[0]){
-	// 	oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, oracle.hacker_calls[0])
-	// 	ret = true
-	// }
 	calls := oracle.hacker_calls[0].nextcalls
 	for _, call := range calls {
 		if oracle.triggerOracle(call) {
 			oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, call)
-			ret = true
+			return true
 		}
 	}
 	return ret
@@ -258,23 +252,22 @@ func (oracle *HackerEtherTransferFailed) InitOracle(hacker_call_hashs []common.H
 	oracle.hacker_exception_calls = make([]*HackerContractCall, 0)
 }
 func (oracle *HackerEtherTransferFailed) TestOracle() bool {
-	ret := false
 	if oracle.triggerOracle(oracle.hacker_calls[0]) {
 		oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, oracle.hacker_calls[0])
-		ret = true
+		return true
 	}
 	calls := oracle.hacker_calls[0].nextcalls
 	for _, call := range calls {
 		if oracle.triggerOracle(call) {
 			oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, call)
-			ret = true
+			return true
 		}
 	}
-	return ret
+	return false
 }
 func (oracle *HackerEtherTransferFailed) triggerOracle(call *HackerContractCall) bool {
 
-	return (call.value.Uint64() > 0 || strings.Contains(call.OperationStack.String(), opCodeToString[BALANCE])) && call.throwException
+	return (call.value.Uint64() > 0 || call.OperationStack.find(opCodeToString[BALANCE])) && call.throwException
 }
 func (oracle *HackerEtherTransferFailed) Write(writer io.Writer) {
 	str := ""
@@ -369,7 +362,7 @@ func (oracle *HackerGaslessSend) TestOracle() bool {
 	for _, call := range calls {
 		if oracle.TriggerExceptionCall(call) {
 			oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, call)
-			hasException = true
+			return true
 		}
 	}
 	return hasException
@@ -420,8 +413,8 @@ func (oracle *HackerDelegateCallInfo) TestOracle() bool {
 	for _, call := range nextcalls {
 		if oracle.TriggerDelegateCall(call) {
 			oracle.hacker_delegate_calls = append(oracle.hacker_delegate_calls, call)
-			hasDelegate = true
 			oracle.GetFeatures(oracle.hacker_calls[0], call)
+			return true
 		}
 	}
 	return hasDelegate
@@ -435,7 +428,7 @@ func (oracle *HackerDelegateCallInfo) GetFeatures(rootcall, call *HackerContract
 	}
 }
 func (oracle *HackerDelegateCallInfo) TriggerDelegateCall(call *HackerContractCall) bool {
-	return strings.Contains(call.OperationStack.String(), opCodeToString[DELEGATECALL])
+	return call.OperationStack.find(opCodeToString[DELEGATECALL])
 }
 func (oracle *HackerDelegateCallInfo) Write(writer io.Writer) {
 	var str string
@@ -482,7 +475,7 @@ func (oracle *HackerExceptionDisorder) TestOracle() bool {
 	for _, call := range nextcalls {
 		if oracle.TriggerExceptionCall(hacker_calls[0], call) {
 			oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, call)
-			exception = true
+			return true
 		}
 	}
 	return exception
@@ -531,7 +524,7 @@ func (oracle *HackerSendOpInfo) TestOracle() bool {
 	for _, call := range nextcalls {
 		if oracle.triggerOracle(call) {
 			oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, call)
-			ret = true
+			return true
 		}
 	}
 	return ret
@@ -581,7 +574,7 @@ func (oracle *HackerCallOpInfo) TestOracle() bool {
 	for _, call := range nextcalls {
 		if oracle.triggerOracle(call) {
 			oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, call)
-			ret = true
+			return true
 		}
 	}
 	return ret
@@ -632,7 +625,7 @@ func (oracle *HackerCallExecption) TestOracle() bool {
 	for _, call := range nextcalls {
 		if oracle.triggerOracle(call) {
 			oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, call)
-			ret = true
+			return true
 		}
 	}
 	return ret
@@ -682,7 +675,7 @@ func (oracle *HackerUnknownCall) TestOracle() bool {
 	for _, call := range nextcalls {
 		if oracle.TriggerOracle(oracle.hacker_calls[0], call) {
 			oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, call)
-			ret = true
+			return true
 		}
 	}
 	return ret
@@ -729,19 +722,15 @@ func (oracle *HackerStorageChanged) InitOracle(hacker_call_hashs []common.Hash, 
 	oracle.hacker_exception_calls = make([]*HackerContractCall, 0, 10)
 }
 func (oracle *HackerStorageChanged) TestOracle() bool {
-	ret := false
 	if oracle.TriggerOracle(oracle.hacker_calls[0]) {
 		oracle.hacker_exception_calls = append(oracle.hacker_exception_calls, oracle.hacker_calls[0])
-		ret = true
+		return true
 	}
-	return ret
+	return false
 }
 
 func (oracle *HackerStorageChanged) TriggerOracle(rootCall *HackerContractCall) bool {
-	return strings.Contains(rootCall.OperationStack.String(), opCodeToString[SSTORE])
-	// rootStorage := rootCall.StateStack
-	// ret, _ := rootStorage.Data()[0].Cmp(rootStorage.Data()[rootStorage.len()-1])
-	// return ret != 0
+	return rootCall.OperationStack.find(opCodeToString[SSTORE])
 }
 func (oracle *HackerStorageChanged) Write(writer io.Writer) {
 	str := ""
@@ -781,7 +770,7 @@ func (oracle *HackerTimestampOp) InitOracle(hacker_call_hashs []common.Hash, hac
 }
 func (oracle *HackerTimestampOp) TestOracle() bool {
 	var rootCall = hacker_calls[0]
-	return strings.Contains(rootCall.OperationStack.String(), opCodeToString[TIMESTAMP])
+	return rootCall.OperationStack.find(opCodeToString[TIMESTAMP])
 }
 func (oracle *HackerTimestampOp) Write(writer io.Writer) {
 	str := ""
@@ -822,7 +811,7 @@ func (oracle *HackerNumberOp) InitOracle(hacker_call_hashs []common.Hash, hacker
 }
 func (oracle *HackerNumberOp) TestOracle() bool {
 	var rootCall = hacker_calls[0]
-	return strings.Contains(rootCall.OperationStack.String(), opCodeToString[NUMBER])
+	return rootCall.OperationStack.find(opCodeToString[NUMBER])
 }
 func (oracle *HackerNumberOp) Write(writer io.Writer) {
 	str := ""
@@ -862,7 +851,7 @@ func (oracle *HackerBlockHashOp) InitOracle(hacker_call_hashs []common.Hash, hac
 }
 func (oracle *HackerBlockHashOp) TestOracle() bool {
 	var rootCall = hacker_calls[0]
-	return strings.Contains(rootCall.OperationStack.String(), opCodeToString[BLOCKHASH])
+	return rootCall.OperationStack.find(opCodeToString[BLOCKHASH])
 }
 func (oracle *HackerBlockHashOp) Write(writer io.Writer) {
 	str := ""

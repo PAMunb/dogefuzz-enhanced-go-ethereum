@@ -2,18 +2,27 @@
 *@ hacker_operation.go
 * 1 store some vital operations which recorded in file @instruction.go
 * 2 key unit:operation_stack
-*/
+ */
 package vm
 
 import (
 	"fmt"
+	"strings"
 )
 
-//HackerOperationStack record
-//opCode's String
-//
+// HackerOperationStack record
+// opCode's String
 type HackerOperationStack struct {
 	data []string
+}
+
+func (stack *HackerOperationStack) find(target string) bool {
+	for _, str := range stack.data {
+		if strings.Index(str, target) >= 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (stack *HackerOperationStack) String() string {

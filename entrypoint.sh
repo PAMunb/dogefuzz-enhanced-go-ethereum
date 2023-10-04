@@ -98,10 +98,11 @@ geth \
     --datadir $ENV_FOLDER \
     --nat "any" \
     --dev.gaslimit "$GAS_LIMIT" \
-    --miner.gaslimit "$GAS_LIMIT" \
+    --miner.noverify  \
     --miner.threads "4" \
     --dev \
     --allow-insecure-unlock \
     --unlock "$DEPLOYER_WALLET_ADDRESS, $AGENT_WALLET_ADDRESS, $NODE_WALLET_ADDRESS" \
     --password "$ENV_FOLDER/pwd.txt" \
+    --ethstats "TestNode2:bazinga@localhost:3000" \
 
